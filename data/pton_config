@@ -1,0 +1,11 @@
+File_Path: ../../USGS_PTON+/GIS.img
+Alternate: ../USGS_PTON+/GIS.img
+West_Bounding_Coordinate: -74.7647689736463
+East_Bounding_Coordinate: -74.6465083740389
+North_Bounding_Coordinate: 40.3804007697839
+South_Bounding_Coordinate: 40.2899011940147
+Custom_Bounds: True
+Custom_West_Bounding_Coordinate: -74.6665
+Custom_East_Bounding_Coordinate: -74.6465
+Custom_North_Bounding_Coordinate: 40.3491
+Custom_South_Bounding_Coordinate: 40.34366

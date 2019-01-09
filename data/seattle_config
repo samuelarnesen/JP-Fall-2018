@@ -1,0 +1,11 @@
+File_Path: ../../USGS_SEATTLE+/GIS.img
+Alternate: ../USGS_SEATTLE+/GIS.img
+West_Bounding_Coordinate: -122.50018518518503
+East_Bounding_Coordinate: -122.24981481481466
+North_Bounding_Coordinate: 47.750185185185174
+South_Bounding_Coordinate: 47.499814814814805
+Custom_Bounds: True
+Custom_West_Bounding_Coordinate: -122.380
+Custom_East_Bounding_Coordinate: -122.311664
+Custom_North_Bounding_Coordinate: 47.70
+Custom_South_Bounding_Coordinate: 47.595780

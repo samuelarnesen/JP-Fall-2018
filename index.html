@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Gradient Map</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body {
+          margin: 0;
+          padding: 0;
+        }
+
+        h2,
+        h3 {
+          margin: 10px;
+          font-size: 1.2em;
+        }
+
+        h3 {
+          font-size: 1em;
+        }
+
+        p {
+          font-size: 0.85em;
+          margin: 10px;
+          text-align: left;
+        }
+
+        input[type=text] {
+            width: 100%;
+            padding: 8px 20px;
+            margin: 8px 0;
+            box-sizing: border-box;
+        }
+
+        /**
+        * Create a position for the map
+        * on the page */
+        #map {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 100%;
+        }
+
+        /**
+        * Set rules for how the map overlays
+        * (info box and legend) will be displayed
+        * on the page. */
+        .map-overlay {
+          position: absolute;
+          background: rgba(255, 255, 255, 0.8);
+          font-family: Arial, sans-serif;
+          overflow: auto;
+          border-radius: 3px;
+        }
+
+        #grad-panel {
+          height: 100px;
+          margin-top: 20px;
+          width: 250px;
+          margin-right: 20px;
+          right: 0;
+          top: 0;
+        }
+
+        #coord-panel {
+          height: 125px;
+          margin-top: 150px;
+          margin-right: 20px;
+          width: 250px;
+          right: 0px;
+          top: 0px;
+        }
+
+        #option-box {
+          height: 190px;
+          margin-top: 20px;
+          margin-left: 10px;
+          width: 270px;
+          left: 0px;
+          top: 0px;
+        }
+
+    #button {
+        background: #fff;
+        position: absolute;
+        z-index: 1;
+        bottom: 10px;
+        right: 80px;
+        border-radius: 3px;
+        width: 120px;
+        border: 1px solid rgba(0,0,0,0.4);
+        font-family: 'Open Sans', sans-serif;
+    }
+
+    #button a {
+        font-size: 13px;
+        color: #404040;
+        display: block;
+        margin: 0;
+        padding: 0;
+        padding: 10px;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(0,0,0,0.25);
+        text-align: center;
+    }
+
+    #button a:last-child {
+        border: none;
+    }
+
+    #button a:hover {
+        background-color: #f8f8f8;
+        color: #404040;
+    }
+
+    #button a.active {
+        background-color: #3887be;
+        color: #ffffff;
+    }
+
+    #button a.active:hover {
+        background: #3074a4;
+    }
+
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<iframe width="0" height="0" border="0" name="invisibleframe" id="invisibleframe"></iframe>
+<div class='map-overlay' id='grad-panel'><h2>Gradient map</h2><div id='pd'><p>Hover over a point!</p></div></div>
+<div class='map-overlay' id='coord-panel'><h2>Control Panel</h2><div id='ib'></div></div>
+<div class='map-overlay' id='option-box'>
+    <form name="CForm" method="GET" action="/cgi-bin/calculate_path.py" target="invisibleframe">
+         Starting Point:<br>
+         <input type="text" name="Start"><br>
+         Ending Point:<br>
+         <input type="text" name="End"><br>
+    </form>
+    <nav id="button"></nav>
+    <div id='ob'></div>
+</div>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1Ijoic2FybWFybmVzZW4iLCJhIjoiY2puY2k0NjZvNW9paDNxbjFxZzZldmU0ayJ9.KkaofqOXW8RmbLXhWo6mNA';
+var map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/mapbox/streets-v9', // stylesheet location
+    center: [-74.65693831443787, 40.35030028170016], // starting position [lng, lat]
+    zoom: 15.57 // starting zoom
+    //center: [-122.32047932652051,47.60428647296811],
+    //zoom: 15.1
+});
+
+map.on('load', function () {
+
+    map.getCanvas().style.cursor = 'default';
+    map.addLayer({
+        "id": "gradient",
+        "type": "fill",
+        "source": {
+            "type": "geojson",
+            "data": "./data/pton_mini.geojson"
+            //"data": "./coordinates.geojson"
+
+        },
+        "paint": {
+            "fill-color": {
+                property: "gradient",
+                stops: [
+                    [0, "#00ff33"],
+                    [2, "#ff0040"],
+                    [4, "#000000"]
+                ]
+            },
+            "fill-opacity": {
+                property: "gradient",
+                stops: [
+                    [0, 0],
+                    [3, .5]
+                ]
+            }, 
+            "fill-antialias": false
+            //"fill-antialias": False;
+        }
+    });
+    map.addSource('lcp_source', {
+        "type": "geojson",
+        "data": "./data/blank.geojson"
+    });
+
+    map.addLayer({
+        "id": "lcp_layer",
+        "type": "line",
+        "source": "lcp_source",
+        "layout": {
+            "line-join": "round",
+            "line-cap": "round",
+            "visibility": "none"
+        },
+        "paint": {
+            "line-color": "#0000FF",
+            "line-width": 8
+        }
+    });
+});
+
+// when one moves the mouse over a covered area,  the gradient for that area is shown
+map.on('mousemove', 'gradient', function(e) {
+    var features = map.queryRenderedFeatures(e.point);
+    var coords = features[0]["geometry"]["coordinates"];
+    var gradients = map.queryRenderedFeatures(e.point, {layers: ['gradient']});
+    if (gradients.length > 0) {
+         document.getElementById('pd').innerHTML = '<h3><strong>Total Elevation Change:<h3><strong>' + gradients[0].properties.gradient;
+    }
+    else {
+        document.getElementById('pd').innerHTML = coords;
+    }
+});
+// when one clicks on a covered area, the coordinates for that area are shown
+map.on('click', 'gradient', function(e) {
+    var features = map.queryRenderedFeatures(e.point);
+    var coords = features[0]["geometry"]["coordinates"][0][0];
+    var coord_txt = coords.join(",\n");
+    document.getElementById('ib').innerHTML = '<h3><strong>Coordinates:</h3><h3>' + coord_txt + '</h3>';
+    //window.location.replace("/cgi-bin/test2.py?start=" + coord_txt)
+    //document.CoordinateForm.Start.value = coord_txt;
+    //document.CoordinateForm.submit();
+});
+
+map.on('mouseenter', 'lcp_layer', function(e) {
+    var features = map.queryRenderedFeatures(e.point);
+    document.getElementById('ib').innerHTML = '<h3><strong>' + e.features[0].properties.description + '</h3>';
+    //window.location.replace("/cgi-bin/test2.py?start=" + coord_txt)
+    //document.CoordinateForm.Start.value = coord_txt;
+    //document.CoordinateForm.submit();
+});
+
+var start_marker = new mapboxgl.Marker({
+    draggable: true
+})
+    .setLngLat([-74.6595373749733, 40.34767967911523])
+    //.setLngLat([-122.32047932652051,47.60428647296811])
+    .addTo(map);
+
+function drag_start() {
+    var lngLat = start_marker.getLngLat();
+    document.CForm.Start.value = lngLat.toArray();
+    map.setLayoutProperty('lcp_layer', 'visibility', 'none');
+}
+
+start_marker.on('dragend', drag_start);
+
+var end_marker = new mapboxgl.Marker({
+    draggable: true
+})
+    .setLngLat([-74.65611085295677, 40.34740780109831])
+    //.setLngLat([-122.32015460729599, 47.604351893025125])
+    .addTo(map);
+
+function drag_end() {
+    var lngLat = end_marker.getLngLat();
+    document.CForm.End.value = lngLat.toArray();
+    map.setLayoutProperty('lcp_layer', 'visibility', 'none');
+}
+
+end_marker.on('dragend', drag_end);
+
+
+
+var thing = document.createElement('a');
+thing.href = '#';
+thing.className = 'active';
+thing.textContent = 'Calculate';
+thing.onclick = function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    var d = new Date();
+    var hr = d.getHours()
+    var min = d.getMinutes()
+    var sec = d.getSeconds()
+
+    if (hr.toString().length == 1)
+        hr = "0" + hr;
+    if (min.toString().length == 1)
+        min = "0" + min;
+    if (sec.toString().length == 1)
+        sec = "00";
+    else
+        sec = sec.toString().charAt(0) + "0";
+
+    var file_name = "./data/endpoints" + hr + ":" + min + ":" + sec + ".geojson";
+    //document.CForm.Config.value = "./data/seattle_config";
+    //document.CForm.File.value = file_name
+    document.CForm.submit();
+    setTimeout(function() {
+        map.getSource('lcp_source').setData(file_name);
+        map.setLayoutProperty('lcp_layer', 'visibility', 'visible');
+        //document.getElementById('ib').innerHTML = map.getSource('lcp_source')[0]["properties"]["description"];
+        document.getElementById('ib').innerHTML = map.getSource('lcp_source').features[0];
+    }, 3000);
+};
+var layers = document.getElementById('button');
+layers.appendChild(thing);
+</script>
+
+</body>
+</html>
